@@ -1,5 +1,5 @@
 {
-  "name": "@adminforth/microsoft-oauth-adapter",
+  "name": "@adminforth/oauth-adapter-microsoft",
   "version": "1.0.13",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,7 +36,7 @@
       [
         "semantic-release-slack-bot",
         {
-          "packageName": "@adminforth/microsoft-oauth-adapter",
+          "packageName": "@adminforth/oauth-adapter-microsoft",
           "notifyOnSuccess": true,
           "notifyOnFail": true,
           "slackIcon": ":package:",
