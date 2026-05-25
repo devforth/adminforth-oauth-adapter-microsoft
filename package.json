@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc && npm version patch",
+    "build": "tsc",
     "rollout": "npm run build && npm publish --access public"
   },
   "keywords": [],
@@ -14,13 +14,42 @@
   "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/devforth/adminforth-microsoft-oauth-adapter.git"
+    "url": "https://github.com/devforth/adminforth-oauth-adapter-microsoft.git"
   },
   "dependencies": {
     "jwt-decode": "^4.0.0",
     "typescript": "^5.8.2"
   },
+  "devDependencies": {
+    "semantic-release": "^24.2.1",
+    "semantic-release-slack-bot": "^4.0.2"
+  },
   "peerDependencies": {
     "adminforth": "^2.24.0"
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      [
+        "semantic-release-slack-bot",
+        {
+          "packageName": "@adminforth/microsoft-oauth-adapter",
+          "notifyOnSuccess": true,
+          "notifyOnFail": true,
+          "slackIcon": ":package:",
+          "markdownReleaseNotes": true
+        }
+      ]
+    ],
+    "branches": [
+      "main",
+      {
+        "name": "next",
+        "prerelease": true
+      }
+    ]
   }
 }
