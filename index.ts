@@ -1,20 +1,18 @@
-import type { OAuth2Adapter } from "adminforth";
+import type { OAuth2Adapter, OAuth2UserInfo } from "adminforth";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
-type OAuth2UserInfoLocal = {
-  email: string;
-  provider?: string;
-  subject?: string;
-  phone?: string;
-  meta?: Record<string, any>;
-  fullName?: string;
-  profilePictureUrl?: string | null;
-  externalUserId?: string | number | null;
-};
-import { jwtDecode } from "jwt-decode";
+
+const microsoftJWKS = createRemoteJWKSet(new URL("https://login.microsoftonline.com/common/discovery/v2.0/keys"));
+
+function isValidMicrosoftIssuer(payload: Record<string, unknown>) {
+  return typeof payload.iss === 'string'
+    && typeof payload.tid === 'string'
+    && payload.iss === `https://login.microsoftonline.com/${payload.tid}/v2.0`;
+}
+
 export default class AdminForthAdapterMicrosoftOauth2 implements OAuth2Adapter {
     private clientID: string;
     private clientSecret: string;
-    private useOpenID: boolean;
     private useOpenIdConnect: boolean;
 
     constructor(options: {
@@ -42,7 +40,7 @@ export default class AdminForthAdapterMicrosoftOauth2 implements OAuth2Adapter {
       return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`;
     }
   
-    async getTokenFromCode(code: string, redirect_uri: string): Promise<OAuth2UserInfoLocal> {
+    async getTokenFromCode(code: string, redirect_uri: string): Promise<OAuth2UserInfo> {
       const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -64,18 +62,28 @@ export default class AdminForthAdapterMicrosoftOauth2 implements OAuth2Adapter {
 
       if (this.useOpenIdConnect && tokenData.id_token) {
         try {
-          const decodedToken: any = jwtDecode(tokenData.id_token);
-          if (decodedToken.email) {
+          const { payload } = await jwtVerify(tokenData.id_token, microsoftJWKS, {
+            audience: this.clientID,
+            algorithms: ["RS256"],
+          });
+
+          if (!isValidMicrosoftIssuer(payload)) {
+            throw new Error(`Microsoft OAuth id_token has invalid issuer "${payload.iss}"`);
+          }
+
+          const email = typeof payload.email === 'string' ? payload.email : undefined;
+          if (email) {
             return {
               provider: this.constructor.name,
-              subject: decodedToken.oid || decodedToken.sub,
-              email: decodedToken.email,
-              fullName: decodedToken.name,
-              profilePictureUrl: null,
+              subject: typeof payload.oid === 'string' ? payload.oid : payload.sub,
+              email,
+              fullName: typeof payload.name === 'string' ? payload.name : undefined,
+              profilePictureUrl: typeof payload.picture === 'string' ? payload.picture : undefined,
             };
           }
         } catch (error) {
-          console.error("Error decoding token:", error);
+          console.error("Error verifying token:", error);
+          throw error;
         }
       }
   
@@ -94,7 +102,7 @@ export default class AdminForthAdapterMicrosoftOauth2 implements OAuth2Adapter {
         subject: userData.id,
         email: userData.mail || userData.userPrincipalName,
         fullName: userData.displayName,
-        profilePictureUrl: null
+        profilePictureUrl: typeof userData.picture === 'string' ? userData.picture : undefined
       };
     }
 

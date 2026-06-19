@@ -20,7 +20,7 @@
     "access": "public"
   },
   "dependencies": {
-    "jwt-decode": "^4.0.0",
+    "jose": "^6.2.3",
     "typescript": "^5.8.2"
   },
   "devDependencies": {
