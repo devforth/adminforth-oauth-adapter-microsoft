@@ -25,7 +25,7 @@
     "typescript": "^5.8.2"
   },
   "devDependencies": {
-    "adminforth": "^3.0.1",
+    "adminforth": "^4.7.3",
     "semantic-release": "^24.2.1",
     "semantic-release-slack-bot": "^4.0.2"
   },
