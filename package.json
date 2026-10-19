@@ -30,7 +30,7 @@
     "semantic-release-slack-bot": "^4.0.2"
   },
   "peerDependencies": {
-    "adminforth": "^3.0.1"
+    "adminforth": "^4.7.3"
   },
   "release": {
     "plugins": [
