@@ -1,5 +1,6 @@
 allowBuilds:
   adminforth: true
   better-sqlite3: true
+  esbuild: false
 minimumReleaseAgeExclude:
   - adminforth

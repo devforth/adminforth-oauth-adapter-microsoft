@@ -4,6 +4,8 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 
 const microsoftJWKS = createRemoteJWKSet(new URL("https://login.microsoftonline.com/common/discovery/v2.0/keys"));
 
+const emailDomain = (email?: string | null) => email?.split('@').pop()?.toLowerCase();
+
 function isValidMicrosoftIssuer(payload: Record<string, unknown>) {
   return typeof payload.iss === 'string'
     && typeof payload.tid === 'string'
@@ -100,7 +102,9 @@ export default class AdminForthAdapterMicrosoftOauth2 implements OAuth2Adapter {
       return {
         provider: this.constructor.name,
         subject: userData.id,
-        email: userData.mail || userData.userPrincipalName,
+        // an admin of any tenant can set mail to any address (nOAuth), while the UPN domain has to be verified
+        // in the tenant, so mail is trusted only on the UPN domain
+        email: emailDomain(userData.mail) === emailDomain(userData.userPrincipalName) ? userData.mail : userData.userPrincipalName,
         fullName: userData.displayName,
         profilePictureUrl: typeof userData.picture === 'string' ? userData.picture : undefined
       };
